@@ -1,19 +1,10 @@
-import os
 import json
-from dotenv import load_dotenv
-from google import genai
 
-load_dotenv()
-
-API_KEY = os.getenv("GEMINI_API_KEY")
-
-if not API_KEY:
-    raise ValueError("GEMINI_API_KEY not found in .env file")
-
-client = genai.Client(api_key=API_KEY)
+from gemini_router import gemini_router
 
 
 def extract_candidate_info(resume_text: str) -> dict:
+
     prompt = f"""
 You are a resume information extraction system.
 
@@ -47,30 +38,66 @@ Resume text:
 {resume_text}
 """
 
-    response = client.models.generate_content(model="gemini-3.6-flash", contents=prompt)
+    # Send request through the API-key router
+    response = gemini_router.generate_content(
+        model="gemini-3.6-flash",
+        contents=prompt
+    )
 
     response_text = response.text.strip()
 
+    # Remove markdown code block if Gemini returns one
     if response_text.startswith("```"):
-        response_text = response_text.replace("```json", "")
-        response_text = response_text.replace("```", "")
+
+        response_text = response_text.replace(
+            "```json",
+            ""
+        )
+
+        response_text = response_text.replace(
+            "```",
+            ""
+        )
+
         response_text = response_text.strip()
 
+    # Convert Gemini response to JSON
     try:
+
         return json.loads(response_text)
 
     except json.JSONDecodeError:
-        raise ValueError(f"Gemini returned invalid JSON:\n{response_text}")
 
+        raise ValueError(
+            f"Gemini returned invalid JSON:\n{response_text}"
+        )
+
+
+# ============================================================
+# TEST
+# ============================================================
 
 if __name__ == "__main__":
+
     from resume_parser import extract_text_from_pdf
 
     pdf_path = "resumes/test_resume.pdf"
 
-    resume_text = extract_text_from_pdf(pdf_path)
+    resume_text = extract_text_from_pdf(
+        pdf_path
+    )
 
-    candidate = extract_candidate_info(resume_text)
+    candidate = extract_candidate_info(
+        resume_text
+    )
 
-    print("\n========== CANDIDATE INFORMATION ==========")
-    print(json.dumps(candidate, indent=4))
+    print(
+        "\n========== CANDIDATE INFORMATION =========="
+    )
+
+    print(
+        json.dumps(
+            candidate,
+            indent=4
+        )
+    )

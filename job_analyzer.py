@@ -1,16 +1,17 @@
 import os
 import json
 from dotenv import load_dotenv
-from google import genai
+#from google import genai
+from gemini_router import gemini_router
 
 load_dotenv()
 
-API_KEY = os.getenv("GEMINI_API_KEY")
+#API_KEY = os.getenv("GEMINI_API_KEY")
 
-if not API_KEY:
-    raise ValueError("GEMINI_API_KEY not found in .env file")
+#if not API_KEY:
+    #raise ValueError("GEMINI_API_KEY not found in .env file")
 
-client = genai.Client(api_key=API_KEY)
+#client = genai.Client(api_key=API_KEY)
 
 
 def analyze_job_description(job_text: str) -> dict:
@@ -44,7 +45,7 @@ Job Description:
 {job_text}
 """
 
-    response = client.models.generate_content(
+    response = gemini_router.generate_content(
         model="gemini-3.6-flash",
         contents=prompt
     )
